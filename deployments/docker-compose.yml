@@ -1,0 +1,62 @@
+version: '3'
+services:
+  snowdepth:
+    image: 'iot-for-tillgenglighet/api-snowdepth:latest'
+    build:
+      context: ..
+      dockerfile: ./deployments/Dockerfile
+    restart: always
+    depends_on:
+      - rabbitmq
+      - postgresdb
+    links:
+      - rabbitmq
+      - postgresdb
+    environment:
+      SNOWDEPTH_DB_HOST: 'postgresdb'
+      SNOWDEPTH_DB_USER: 'testuser'
+      SNOWDEPTH_DB_NAME: 'snowdepth'
+      SNOWDEPTH_DB_PASSWORD: 'testpass'
+      SNOWDEPTH_DB_SSLMODE: 'disable'
+      SNOWDEPTH_API_PORT: '8282'
+      
+    ports:
+      - '8282:8282'
+
+
+  #ingress:
+  #  image: 'iot-for-tillgenglighet/ingress-mqtt:latest'
+  #  restart: always
+  #  depends_on:
+  #    - snowdepth
+  #  links:
+  #    - rabbitmq
+  
+  
+  postgresdb:
+    image: 'iot-for-tillgenglighet/testdb-postgres:latest'
+    build:
+      context: ..
+      dockerfile: ./test/database/testdb-dockerfile
+    restart: always
+    environment:
+      POSTGRES_DB: 'snowdepth'
+      POSTGRES_USER: 'testuser'
+      POSTGRES_PASSWORD: 'testpass'
+    ports:
+      - '5432'
+
+
+  rabbitmq:
+    image: 'bitnami/rabbitmq:3.7'
+    ports:
+      - '4369:4369'
+      - '5672:5672'
+      - '25672:25672'
+      - '15672:15672'
+    volumes:
+      - 'rabbitmq_data:/bitnami'
+
+volumes:
+  rabbitmq_data:
+    driver: local
