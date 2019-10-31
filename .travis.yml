@@ -1,0 +1,12 @@
+notifications:
+  email: false
+
+language: go
+services:
+  - docker
+
+before_install:
+  - echo "$DOCKER_PASSWORD" | docker login docker.pkg.github.com -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -f deployments/Dockerfile -t github.com/iot-for-tillgenglighet/api-snowdepth .
+  - docker tag github.com/iot-for-tillgenglighet/api-snowdepth docker.pkg.github.com/iot-for-tillgenglighet/api-snowdepth/api-snowdepth:$TRAVIS_COMMIT
+  - docker push docker.pkg.github.com/iot-for-tillgenglighet/api-snowdepth/api-snowdepth:$TRAVIS_COMMIT
