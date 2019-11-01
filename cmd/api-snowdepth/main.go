@@ -8,6 +8,7 @@ import (
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/handler"
 	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging"
+	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging/telemetry"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 
 	database.ConnectToDB()
 
-	messenger.RegisterTopicMessageHandler((&TelemetrySnowdepth{}).TopicName(), receiveSnowdepth)
+	messenger.RegisterTopicMessageHandler((&telemetry.Snowdepth{}).TopicName(), receiveSnowdepth)
 
 	handler.Router()
 }

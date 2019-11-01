@@ -8,27 +8,19 @@ import (
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
-	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging"
+	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging/telemetry"
 )
-
-type TelemetrySnowdepth struct {
-	messaging.IoTHubMessage
-	Depth float32 `json:"depth"`
-}
-
-func (t *TelemetrySnowdepth) TopicName() string {
-	return "telemetry.snowdepth"
-}
 
 func receiveSnowdepth(msg amqp.Delivery) {
 
 	log.Info("Message received from queue: " + string(msg.Body))
 
-	depth := &TelemetrySnowdepth{}
+	depth := &telemetry.Snowdepth{}
 	err := json.Unmarshal(msg.Body, depth)
 
 	if err != nil {
 		log.Error("Failed to unmarshal message")
+		return
 	}
 
 	newdepth := &models.Snowdepth{
