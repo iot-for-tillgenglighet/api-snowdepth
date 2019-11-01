@@ -1,28 +1,29 @@
 package main
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/handler"
+	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging"
 )
 
 func main() {
 
-	log.Info("Starting api-snowdepth")
+	serviceName := "api-snowdepth"
 
-	time.Sleep(30 * time.Second)
+	log.Infof("Starting up %s ...", serviceName)
+
+	config := messaging.LoadConfiguration(serviceName)
+	messenger, _ := messaging.Initialize(config)
+
+	defer messenger.Close()
 
 	database.ConnectToDB()
 
-	connection, channel := receiveSnowdepth()
-
-	defer connection.Close()
-	defer channel.Close()
+	messenger.RegisterTopicMessageHandler((&TelemetrySnowdepth{}).TopicName(), receiveSnowdepth)
 
 	handler.Router()
 }
