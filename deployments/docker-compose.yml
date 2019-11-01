@@ -19,6 +19,7 @@ services:
       SNOWDEPTH_DB_PASSWORD: 'testpass'
       SNOWDEPTH_DB_SSLMODE: 'disable'
       SNOWDEPTH_API_PORT: '8282'
+      RABBITMQ_HOST: 'rabbitmq'
       
     ports:
       - '8282:8282'
