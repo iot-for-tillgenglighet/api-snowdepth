@@ -25,6 +25,18 @@ services:
       - '8282:8282'
 
 
+  federation:
+    build:
+      context: ..
+      dockerfile: ./test/federation/federation-dockerfile
+    restart: always
+    environment:
+      API_GQL_FEDERATION_PORT: '8989'
+      API_GQL_FEDERATION_SVCS: 'snowdepth:8282'
+    ports:
+      - '8989:8989'
+
+
   #ingress:
   #  image: 'iot-for-tillgenglighet/ingress-mqtt:latest'
   #  restart: always
@@ -57,6 +69,7 @@ services:
       - '15672'
     volumes:
       - 'rabbitmq_data:/bitnami'
+
 
 volumes:
   rabbitmq_data:

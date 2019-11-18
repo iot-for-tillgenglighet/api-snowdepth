@@ -1,0 +1,16 @@
+{
+  "name": "gqlfederation",
+  "version": "1.0.0",
+  "description": "Trying out Apollo Federation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Isak Styf",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@apollo/gateway": "^0.11.0",
+    "apollo-server": "^2.9.9",
+    "graphql": "^14.5.8"
+  }
+}
