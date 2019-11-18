@@ -1,0 +1,17 @@
+# .gqlgen.yml example
+#
+
+schema:
+- api/graphql-spec/schema.graphql
+federated: true
+exec:
+  filename: internal/pkg/graphql/generated.go
+  package: graphql
+model:
+  filename: internal/pkg/graphql/models_gen.go
+  package: graphql
+resolver:
+  filename: internal/pkg/graphql/resolver.go
+  package: graphql
+  type: Resolver
+autobind: []

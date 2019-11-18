@@ -15,6 +15,7 @@ import (
 
 var db *gorm.DB
 
+//GetDB returns a pointer to our global database object. Yes, this should be refactored ...
 func GetDB() *gorm.DB {
 	return db
 }
@@ -26,6 +27,8 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+//ConnectToDB extracts connection information from environment variables and
+//initiates a connection to the database.
 func ConnectToDB() {
 
 	dbHost := os.Getenv("SNOWDEPTH_DB_HOST")
@@ -49,4 +52,38 @@ func ConnectToDB() {
 		}
 		defer conn.Close()
 	}
+}
+
+//AddManualSnowdepthMeasurement takes a position and a depth and adds a record to the database
+func AddManualSnowdepthMeasurement(latitude, longitude, depth float64) (*models.Snowdepth, error) {
+	t := time.Now().UTC()
+
+	measurement := &models.Snowdepth{
+		Latitude:  latitude,
+		Longitude: longitude,
+		Depth:     float32(depth),
+		Timestamp: t.Format(time.RFC3339),
+	}
+
+	GetDB().Create(measurement)
+
+	return measurement, nil
+}
+
+//GetLatestSnowdepths returns the most recent value for all sensors, as well as
+//all manually added values during the last 24 hours
+func GetLatestSnowdepths() ([]models.Snowdepth, error) {
+
+	// Get depths from the last 24 hours
+	queryStart := time.Now().UTC().AddDate(0, 0, -1).Format(time.RFC3339)
+
+	// TODO: Implement this as a single operation instead
+
+	latestFromDevices := []models.Snowdepth{}
+	GetDB().Table("snowdepths").Select("DISTINCT ON (device) *").Where("device <> '' AND timestamp > ?", queryStart).Order("device, timestamp desc").Find(&latestFromDevices)
+
+	latestManual := []models.Snowdepth{}
+	GetDB().Table("snowdepths").Where("device = '' AND timestamp > ?", queryStart).Find(&latestManual)
+
+	return append(latestFromDevices, latestManual...), nil
 }

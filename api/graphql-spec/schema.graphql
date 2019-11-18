@@ -1,0 +1,46 @@
+
+type Device @key(fields: "id") {
+  id: ID!
+}
+
+type WGS84Position {
+  lon: Float!
+  lat: Float!
+}
+
+type Origin {
+  device: Device
+  pos: WGS84Position
+}
+
+scalar DateTime
+
+interface Telemetry {
+  from: Origin!
+  when: DateTime!
+}
+
+type Snowdepth implements Telemetry {
+  from: Origin!
+  when: DateTime!
+  depth: Float!
+  manual: Boolean
+}
+
+type Query @extends {
+  snowdepths: [Snowdepth]!
+}
+
+input MeasurementPosition {
+  lon: Float!
+  lat: Float!
+}
+
+input NewSnowdepthMeasurement {
+    pos: MeasurementPosition!
+    depth: Float!
+}
+
+type Mutation @extends {
+    addSnowdepthMeasurement(input: NewSnowdepthMeasurement!): Snowdepth!
+}
