@@ -80,3 +80,4 @@ func (r *queryResolver) Snowdepths(ctx context.Context) ([]*Snowdepth, error) {
 
 	return gqldepths, nil
 }
+
