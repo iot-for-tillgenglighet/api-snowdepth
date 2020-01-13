@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"os"
 
+	
+	"github.com/rs/cors"
 	"github.com/99designs/gqlgen/handler"
 	gql "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/graphql"
 
@@ -11,6 +13,8 @@ import (
 )
 
 func Router() {
+
+	mux := http.NewServeMux()
 
 	port := os.Getenv("SNOWDEPTH_API_PORT")
 	if port == "" {
@@ -22,5 +26,7 @@ func Router() {
 	http.Handle("/api/graphql/playground", handler.Playground("GraphQL playground", "/api/graphql"))
 	http.Handle("/api/graphql", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}})))
 
-	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS()(r)))
+	CORS := cors.Default().Handler(mux)
+
+	log.Fatal(http.ListenAndServe(":"+port, CORS))
 }
