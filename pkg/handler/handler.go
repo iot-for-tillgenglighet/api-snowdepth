@@ -22,5 +22,5 @@ func Router() {
 	http.Handle("/api/graphql/playground", handler.Playground("GraphQL playground", "/api/graphql"))
 	http.Handle("/api/graphql", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}})))
 
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS()(r)))
 }
