@@ -25,16 +25,16 @@ services:
       - '8282:8282'
 
 
-  federation:
-    build:
-      context: ..
-      dockerfile: ./test/federation/federation-dockerfile
-    restart: always
-    environment:
-      API_GQL_FEDERATION_PORT: '8989'
-      API_GQL_FEDERATION_SVCS: 'snowdepth:8282'
-    ports:
-      - '8989:8989'
+#  federation:
+#    build:
+#      context: ..
+#      dockerfile: ./test/federation/federation-dockerfile
+#    restart: always
+#    environment:
+#      API_GQL_FEDERATION_PORT: '8989'
+#      API_GQL_FEDERATION_SVCS: 'snowdepth:8282'
+#    ports:
+#      - '8989:8989'
 
 
   #ingress:

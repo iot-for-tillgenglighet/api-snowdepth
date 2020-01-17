@@ -23,10 +23,10 @@ func Router() {
 
 	log.Printf("Starting api-snowdepth on port %s.\n", port)
 
-	http.Handle("/api/graphql/playground", handler.Playground("GraphQL playground", "/api/graphql"))
-	http.Handle("/api/graphql", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}})))
+	mux.HandleFunc("/api/graphql/playground", handler.Playground("GraphQL playground", "/api/graphql"))
+	mux.HandleFunc("/api/graphql", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}})))
 
-	CORS := cors.Default().Handler(mux)
+	c := cors.Default().Handler(mux)
 
-	log.Fatal(http.ListenAndServe(":"+port, CORS))
+	log.Fatal(http.ListenAndServe(":"+port, c))
 }

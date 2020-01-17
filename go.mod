@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.10.2
 	github.com/agnivade/levenshtein v1.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/iot-for-tillgenglighet/api-temperature v0.0.0-20191114231120-e3744f3c39f6
