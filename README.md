@@ -1,4 +1,4 @@
-# Introduction 
+# Introduction
 
 This service is responsible for storing snowdepth telemetry and provide it to consumers via an API.
 
@@ -16,4 +16,8 @@ This service is responsible for storing snowdepth telemetry and provide it to co
 
 The ingress service will exit fatally and restart a couple of times until the RabbitMQ container is properly initialized and ready to accept connections. This is to be expected.
 
-To clean up the environment properly after testing it is advisable to run `docker-compose down -v`
+# Clean up the environment
+
+`docker-compose -f ./deployments/docker-compose.yml down -v`
+
+To clean up the environment properly after testing.
