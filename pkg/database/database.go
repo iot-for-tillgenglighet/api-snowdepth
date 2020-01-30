@@ -57,12 +57,21 @@ func ConnectToDB() {
 //AddManualSnowdepthMeasurement takes a position and a depth and adds a record to the database
 func AddManualSnowdepthMeasurement(latitude, longitude, depth float64) (*models.Snowdepth, error) {
 	t := time.Now().UTC()
+	return AddSnowdepthMeasurement(nil, latitude, longitude, depth, t.Format(time.RFC3339))
+}
+
+//AddSnowdepthMeasurement takes a device, position and a depth and adds a record to the database
+func AddSnowdepthMeasurement(device *string, latitude, longitude, depth float64, when string) (*models.Snowdepth, error) {
 
 	measurement := &models.Snowdepth{
 		Latitude:  latitude,
 		Longitude: longitude,
 		Depth:     float32(depth),
-		Timestamp: t.Format(time.RFC3339),
+		Timestamp: when,
+	}
+
+	if device != nil {
+		measurement.Device = *device
 	}
 
 	GetDB().Create(measurement)
