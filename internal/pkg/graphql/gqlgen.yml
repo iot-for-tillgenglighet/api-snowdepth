@@ -1,9 +1,9 @@
-# .gqlgen.yml example
-#
 
 schema:
-- api/graphql-spec/schema.graphql
-federated: true
+  - api/graphql-spec/schema.graphql
+federation:
+  filename: internal/pkg/graphql/federation.go
+  package: graphql
 exec:
   filename: internal/pkg/graphql/generated.go
   package: graphql
