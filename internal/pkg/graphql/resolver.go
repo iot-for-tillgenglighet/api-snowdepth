@@ -1,3 +1,4 @@
+// THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 package graphql
 
 import (
@@ -5,27 +6,13 @@ import (
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
-) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
+)
 
 type Resolver struct{}
-
-func (r *Resolver) Entity() EntityResolver {
-	return &entityResolver{r}
-}
-func (r *Resolver) Mutation() MutationResolver {
-	return &mutationResolver{r}
-}
-func (r *Resolver) Query() QueryResolver {
-	return &queryResolver{r}
-}
-
-type entityResolver struct{ *Resolver }
 
 func (r *entityResolver) FindDeviceByID(ctx context.Context, id string) (*Device, error) {
 	return &Device{ID: id}, nil
 }
-
-type mutationResolver struct{ *Resolver }
 
 func convertDatabaseRecordToGQL(measurement *models.Snowdepth) *Snowdepth {
 	if measurement != nil {
@@ -57,8 +44,6 @@ func (r *mutationResolver) AddSnowdepthMeasurement(ctx context.Context, input Ne
 	return convertDatabaseRecordToGQL(measurement), err
 }
 
-type queryResolver struct{ *Resolver }
-
 func (r *queryResolver) Snowdepths(ctx context.Context) ([]*Snowdepth, error) {
 	depths, err := database.GetLatestSnowdepths()
 
@@ -81,3 +66,10 @@ func (r *queryResolver) Snowdepths(ctx context.Context) ([]*Snowdepth, error) {
 	return gqldepths, nil
 }
 
+func (r *Resolver) Entity() EntityResolver     { return &entityResolver{r} }
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+func (r *Resolver) Query() QueryResolver       { return &queryResolver{r} }
+
+type entityResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

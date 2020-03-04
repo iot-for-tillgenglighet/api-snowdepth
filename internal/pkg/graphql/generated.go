@@ -13,9 +13,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/99designs/gqlgen/plugin/federation"
-	"github.com/vektah/gqlparser"
-	"github.com/vektah/gqlparser/ast"
+	"github.com/99designs/gqlgen/plugin/federation/fedruntime"
+	gqlparser "github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -80,7 +80,7 @@ type ComplexityRoot struct {
 		Lon func(childComplexity int) int
 	}
 
-	_Service struct {
+	Service struct {
 		SDL func(childComplexity int) int
 	}
 }
@@ -224,11 +224,11 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.WGS84Position.Lon(childComplexity), true
 
 	case "_Service.sdl":
-		if e.complexity._Service.SDL == nil {
+		if e.complexity.Service.SDL == nil {
 			break
 		}
 
-		return e.complexity._Service.SDL(childComplexity), true
+		return e.complexity.Service.SDL(childComplexity), true
 
 	}
 	return 0, false
@@ -293,61 +293,85 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
 }
 
-var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "schema.graphql", Input: `directive @extends on OBJECT
-directive @external on FIELD_DEFINITION
-directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
-directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
-directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
-scalar DateTime
-type Device @key(fields: "id") {
-	id: ID!
+var sources = []*ast.Source{
+	&ast.Source{Name: "api/graphql-spec/schema.graphql", Input: `
+extend type Device @key(fields: "id") {
+  id: ID! @external
 }
-input MeasurementPosition {
-	lon: Float!
-	lat: Float!
-}
-type Mutation @extends {
-	addSnowdepthMeasurement(input: NewSnowdepthMeasurement!): Snowdepth!
-}
-input NewSnowdepthMeasurement {
-	pos: MeasurementPosition!
-	depth: Float!
-}
-type Origin {
-	device: Device
-	pos: WGS84Position
-}
-type Query @extends {
-	snowdepths: [Snowdepth]!
-	_entities(representations: [_Any!]!): [_Entity]!
-	_service: _Service!
-}
-type Snowdepth implements Telemetry {
-	from: Origin!
-	when: DateTime!
-	depth: Float!
-	manual: Boolean
-}
-interface Telemetry {
-	from: Origin!
-	when: DateTime!
-}
+
 type WGS84Position {
-	lon: Float!
-	lat: Float!
+  lon: Float!
+  lat: Float!
 }
+
+type Origin {
+  device: Device
+  pos: WGS84Position
+}
+
+scalar DateTime
+
+interface Telemetry {
+  from: Origin!
+  when: DateTime!
+}
+
+type Snowdepth implements Telemetry {
+  from: Origin!
+  when: DateTime!
+  depth: Float!
+  manual: Boolean
+}
+
+type Query @extends {
+  snowdepths: [Snowdepth]!
+}
+
+input MeasurementPosition {
+  lon: Float!
+  lat: Float!
+}
+
+input NewSnowdepthMeasurement {
+    pos: MeasurementPosition!
+    depth: Float!
+}
+
+type Mutation @extends {
+    addSnowdepthMeasurement(input: NewSnowdepthMeasurement!): Snowdepth!
+}
+`, BuiltIn: false},
+	&ast.Source{Name: "federation/directives.graphql", Input: `
 scalar _Any
-"""
-A union unifies all @entity types (TODO: interfaces)
-"""
-union _Entity = Device
 scalar _FieldSet
-type _Service {
-	sdl: String!
+
+directive @external on FIELD_DEFINITION
+directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+directive @extends on OBJECT
+`, BuiltIn: true},
+	&ast.Source{Name: "federation/entity.graphql", Input: `
+# a union of all types that use the @key directive
+union _Entity = Device
+
+# fake type to build resolver interfaces for users to implement
+type Entity {
+		findDeviceByID(id: ID!,): Device!
+
 }
-`},
-)
+
+type _Service {
+  sdl: String
+}
+
+extend type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
+}
+`, BuiltIn: true},
+}
+var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // endregion ************************** generated!.gotpl **************************
 
@@ -693,9 +717,9 @@ func (ec *executionContext) _Query__entities(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]_Entity)
+	res := resTmp.([]fedruntime.Entity)
 	fc.Result = res
-	return ec.marshalN_Entity2ᚕgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑsnowdepthᚋinternalᚋpkgᚋgraphqlᚐ_Entity(ctx, field.Selections, res)
+	return ec.marshalN_Entity2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐEntity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query__service(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -727,9 +751,9 @@ func (ec *executionContext) _Query__service(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(federation.Service)
+	res := resTmp.(fedruntime.Service)
 	fc.Result = res
-	return ec.marshalN_Service2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚐService(ctx, field.Selections, res)
+	return ec.marshalN_Service2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1002,7 +1026,7 @@ func (ec *executionContext) _WGS84Position_lat(ctx context.Context, field graphq
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) __Service_sdl(ctx context.Context, field graphql.CollectedField, obj *federation.Service) (ret graphql.Marshaler) {
+func (ec *executionContext) __Service_sdl(ctx context.Context, field graphql.CollectedField, obj *fedruntime.Service) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1026,14 +1050,11 @@ func (ec *executionContext) __Service_sdl(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2159,7 +2180,7 @@ func (ec *executionContext) _Telemetry(ctx context.Context, sel ast.SelectionSet
 	}
 }
 
-func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, obj _Entity) graphql.Marshaler {
+func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, obj fedruntime.Entity) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
@@ -2448,7 +2469,7 @@ func (ec *executionContext) _WGS84Position(ctx context.Context, sel ast.Selectio
 
 var _ServiceImplementors = []string{"_Service"}
 
-func (ec *executionContext) __Service(ctx context.Context, sel ast.SelectionSet, obj *federation.Service) graphql.Marshaler {
+func (ec *executionContext) __Service(ctx context.Context, sel ast.SelectionSet, obj *fedruntime.Service) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, _ServiceImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2459,9 +2480,6 @@ func (ec *executionContext) __Service(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = graphql.MarshalString("_Service")
 		case "sdl":
 			out.Values[i] = ec.__Service_sdl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2935,7 +2953,7 @@ func (ec *executionContext) marshalN_Any2ᚕmapᚄ(ctx context.Context, sel ast.
 	return ret
 }
 
-func (ec *executionContext) marshalN_Entity2ᚕgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑsnowdepthᚋinternalᚋpkgᚋgraphqlᚐ_Entity(ctx context.Context, sel ast.SelectionSet, v []_Entity) graphql.Marshaler {
+func (ec *executionContext) marshalN_Entity2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐEntity(ctx context.Context, sel ast.SelectionSet, v []fedruntime.Entity) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2959,7 +2977,7 @@ func (ec *executionContext) marshalN_Entity2ᚕgithubᚗcomᚋiotᚑforᚑtillge
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalO_Entity2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑsnowdepthᚋinternalᚋpkgᚋgraphqlᚐ_Entity(ctx, sel, v[i])
+			ret[i] = ec.marshalO_Entity2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐEntity(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2986,7 +3004,7 @@ func (ec *executionContext) marshalN_FieldSet2string(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalN_Service2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚐService(ctx context.Context, sel ast.SelectionSet, v federation.Service) graphql.Marshaler {
+func (ec *executionContext) marshalN_Service2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐService(ctx context.Context, sel ast.SelectionSet, v fedruntime.Service) graphql.Marshaler {
 	return ec.__Service(ctx, sel, &v)
 }
 
@@ -3295,7 +3313,7 @@ func (ec *executionContext) marshalOWGS84Position2ᚖgithubᚗcomᚋiotᚑforᚑ
 	return ec._WGS84Position(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalO_Entity2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑsnowdepthᚋinternalᚋpkgᚋgraphqlᚐ_Entity(ctx context.Context, sel ast.SelectionSet, v _Entity) graphql.Marshaler {
+func (ec *executionContext) marshalO_Entity2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐEntity(ctx context.Context, sel ast.SelectionSet, v fedruntime.Entity) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
