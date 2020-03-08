@@ -6,20 +6,11 @@ type Telemetry interface {
 	IsTelemetry()
 }
 
-// _Entity represents all types with @key
-type _Entity interface {
-	Is_Entity()
-}
-
 type Device struct {
 	ID string `json:"id"`
 }
 
-func (Device) Is_Entity() {}
-
-type Entity struct {
-	FindDeviceByID *Device `json:"findDeviceByID"`
-}
+func (Device) IsEntity() {}
 
 type MeasurementPosition struct {
 	Lon float64 `json:"lon"`
