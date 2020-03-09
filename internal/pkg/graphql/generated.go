@@ -295,8 +295,8 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	&ast.Source{Name: "api/graphql-spec/schema.graphql", Input: `
-type Device @key(fields: "id") {
-  id: ID!
+extend type Device @key(fields: "id") {
+  id: ID! @external
 }
 
 type WGS84Position {

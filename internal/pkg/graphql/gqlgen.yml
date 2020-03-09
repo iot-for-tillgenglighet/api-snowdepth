@@ -1,8 +1,6 @@
-# .gqlgen.yml example
-#
 
 schema:
-- api/graphql-spec/schema.graphql
+  - api/graphql-spec/schema.graphql
 federation:
   filename: internal/pkg/graphql/federation.go
   package: graphql

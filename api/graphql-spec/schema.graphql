@@ -1,6 +1,6 @@
 
-type Device @key(fields: "id") {
-  id: ID!
+extend type Device @key(fields: "id") {
+  id: ID! @external
 }
 
 type WGS84Position {
