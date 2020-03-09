@@ -1,5 +1,9 @@
 package types
 
+type Entity struct {
+	Context []string `json:"@context"`
+}
+
 type Property struct {
 	Type string `json:"type"`
 }
@@ -89,6 +93,7 @@ type WeatherObserved struct {
 	Location     GeoJSONProperty     `json:"location"`
 	RefDevice    *DeviceRelationship `json:"refDevice,omitempty"`
 	SnowHeight   *NumberProperty     `json:"snowHeight,omitempty"`
+	Entity
 }
 
 func NewWeatherObserved(device string, latitude float64, longitude float64, observedAt string) *WeatherObserved {
@@ -107,5 +112,11 @@ func NewWeatherObserved(device string, latitude float64, longitude float64, obse
 		DateObserved: *dateTimeValue,
 		Location:     createGeoJSONPropertyFromWGS84(latitude, longitude),
 		RefDevice:    refDevice,
+		Entity: Entity{
+			Context: []string{
+				"https://schema.lab.fiware.org/ld/context",
+				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",
+			},
+		},
 	}
 }
