@@ -22,7 +22,7 @@ services:
       RABBITMQ_HOST: 'rabbitmq'
       
     ports:
-      - '8282'
+      - '8282:8282'
 
 
   deviceregistry:
