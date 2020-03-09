@@ -14,7 +14,7 @@ import (
 func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *types.WeatherObserved {
 	if r != nil {
 		entity := types.NewWeatherObserved(r.Device, r.Latitude, r.Longitude, r.Timestamp)
-		entity.SnowHeight = types.NewNumberProperty(math.Round(float64(r.Depth)))
+		entity.SnowHeight = types.NewNumberProperty(math.Round(float64(r.Depth*10)) / 10)
 		return entity
 	}
 

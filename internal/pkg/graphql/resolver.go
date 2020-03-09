@@ -3,6 +3,7 @@ package graphql
 
 import (
 	"context"
+	"math"
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
@@ -24,7 +25,7 @@ func convertDatabaseRecordToGQL(measurement *models.Snowdepth) *Snowdepth {
 				},
 			},
 			When:  measurement.Timestamp,
-			Depth: float64(measurement.Depth),
+			Depth: math.Round(float64(measurement.Depth*10)) / 10,
 		}
 
 		if len(measurement.Device) == 0 {
