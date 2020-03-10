@@ -7,7 +7,6 @@ import (
 	"github.com/streadway/amqp"
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
-	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
 	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging/telemetry"
 )
 
@@ -23,13 +22,11 @@ func receiveSnowdepth(msg amqp.Delivery) {
 		return
 	}
 
-	newdepth := &models.Snowdepth{
-		Device:    depth.Origin.Device,
-		Latitude:  depth.Origin.Latitude,
-		Longitude: depth.Origin.Longitude,
-		Depth:     depth.Depth,
-		Timestamp: depth.Timestamp,
-	}
-
-	database.GetDB().Create(newdepth)
+	// TODO: Propagate database errors, catch and log them here ...
+	database.AddSnowdepthMeasurement(
+		&depth.Origin.Device,
+		depth.Origin.Latitude, depth.Origin.Longitude,
+		float64(depth.Depth),
+		depth.Timestamp,
+	)
 }

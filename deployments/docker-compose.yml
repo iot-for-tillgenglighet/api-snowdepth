@@ -25,6 +25,16 @@ services:
       - '8282:8282'
 
 
+  deviceregistry:
+    image: 'iot-for-tillgenglighet/iot-device-registry:latest'
+    restart: always
+    environment:
+      SERVICE_PORT: '8990'
+
+    ports:
+      - '8990'
+
+
   federation:
     build:
       context: ..
@@ -32,19 +42,28 @@ services:
     restart: always
     environment:
       API_GQL_FEDERATION_PORT: '8989'
-      API_GQL_FEDERATION_SVCS: 'snowdepth:8282'
+      API_GQL_FEDERATION_SVCS: 'snowdepth:8282,deviceregistry:8990'
     ports:
       - '8989:8989'
 
 
-  #ingress:
-  #  image: 'iot-for-tillgenglighet/ingress-mqtt:latest'
-  #  restart: always
-  #  depends_on:
-  #    - snowdepth
-  #  links:
-  #    - rabbitmq
-  
+  ingress:
+    image: 'iot-for-tillgenglighet/ingress-mqtt:latest'
+    restart: always
+    depends_on:
+      - snowdepth
+    links:
+      - rabbitmq
+    environment:
+      MQTT_HOST: $MQTT_HOST
+      MQTT_PORT: $MQTT_PORT
+      MQTT_TOPIC: $MQTT_TOPIC
+      MQTT_USER: $MQTT_USER
+      MQTT_PASSWORD: $MQTT_PASSWORD
+      RABBITMQ_HOST: 'rabbitmq'
+      RABBITMQ_USER: 'user'
+      RABBITMQ_PASSWORD: 'bitnami'
+    
   
   postgresdb:
     image: 'iot-for-tillgenglighet/testdb-postgres:latest'
@@ -61,7 +80,7 @@ services:
 
 
   rabbitmq:
-    image: 'bitnami/rabbitmq:3.7'
+    image: 'bitnami/rabbitmq:3.8'
     ports:
       - '4369'
       - '5672'
