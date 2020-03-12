@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
+	"strings"
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld/errors"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld/types"
@@ -26,8 +27,16 @@ func QueryEntities(w http.ResponseWriter, r *http.Request) {
 	entityTypes := r.URL.Query().Get("type")
 
 	if entityTypes != "" && entityTypes != "WeatherObserved" {
-		errors.ReportNewInvalidRequest(w, "Entity type not supported by this service")
+		errors.ReportNewInvalidRequest(w, "This service only supports the WeatherObserved entity type.")
 		return
+	}
+
+	attributes := strings.Split(r.URL.Query().Get("attrs"), ",")
+	for _, attr := range attributes {
+		if attr != "" && attr != "snowHeight" {
+			errors.ReportNewInvalidRequest(w, "This service only supports the snowHeight attribute.")
+			return
+		}
 	}
 
 	snowdepths, err := database.GetLatestSnowdepths()

@@ -100,7 +100,7 @@ func (p *ProblemDetailsImpl) WriteResponse(w http.ResponseWriter) {
 	w.Header().Add("Content-Type", p.ContentType())
 	w.Header().Add("Content-Language", "en")
 
-	pdbytes, err := p.MarshalJSON()
+	pdbytes, err := json.MarshalIndent(p, "", "  ")
 	if err == nil {
 		w.Write(pdbytes)
 	}
