@@ -31,6 +31,7 @@ func convertDatabaseRecordToGQL(measurement *models.Snowdepth) *Snowdepth {
 		if len(measurement.Device) == 0 {
 			depth.Manual = &[]bool{true}[0] // <- You may Google that little nugget of beauty ...
 		} else {
+			depth.Manual = &[]bool{false}[0]
 			depth.From.Device = &Device{ID: measurement.Device}
 		}
 
