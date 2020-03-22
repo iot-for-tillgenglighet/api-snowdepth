@@ -22,9 +22,9 @@ func main() {
 
 	defer messenger.Close()
 
-	database.ConnectToDB()
+	db, _ := database.NewDatabaseConnection()
 
-	messenger.RegisterTopicMessageHandler((&telemetry.Snowdepth{}).TopicName(), receiveSnowdepth)
+	messenger.RegisterTopicMessageHandler((&telemetry.Snowdepth{}).TopicName(), createSnowdepthReceiver(db))
 
-	handler.Router()
+	handler.CreateRouterAndStartServing(db)
 }

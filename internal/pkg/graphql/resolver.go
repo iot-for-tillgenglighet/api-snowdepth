@@ -42,12 +42,22 @@ func convertDatabaseRecordToGQL(measurement *models.Snowdepth) *Snowdepth {
 }
 
 func (r *mutationResolver) AddSnowdepthMeasurement(ctx context.Context, input NewSnowdepthMeasurement) (*Snowdepth, error) {
-	measurement, err := database.AddManualSnowdepthMeasurement(input.Pos.Lat, input.Pos.Lon, input.Depth)
+	db, err := database.GetFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	measurement, err := db.AddManualSnowdepthMeasurement(input.Pos.Lat, input.Pos.Lon, input.Depth)
 	return convertDatabaseRecordToGQL(measurement), err
 }
 
 func (r *queryResolver) Snowdepths(ctx context.Context) ([]*Snowdepth, error) {
-	depths, err := database.GetLatestSnowdepths()
+	db, err := database.GetFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	depths, err := db.GetLatestSnowdepths()
 
 	if err != nil {
 		panic("Failed to query latest snowdepths: " + err.Error())
