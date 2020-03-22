@@ -13,16 +13,43 @@ import (
 	"github.com/go-chi/chi/middleware"
 	gql "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/graphql"
 	ngsi "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld"
+	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
 	"github.com/rs/cors"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func Router() {
+//RequestRouter wraps the concrete router implementation
+type RequestRouter struct {
+	impl *chi.Mux
+}
 
-	router := chi.NewRouter()
+func (router *RequestRouter) addGraphQLHandlers(db database.Datastore) {
+	gqlServer := handler.New(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}}))
+	gqlServer.AddTransport(&transport.POST{})
+	gqlServer.Use(extension.Introspection{})
 
-	router.Use(cors.New(cors.Options{
+	// TODO: Investigate some way to use closures instead of context even for GraphQL handlers
+	router.impl.Use(database.Middleware(db))
+
+	router.impl.Handle("/api/graphql/playground", playground.Handler("GraphQL playground", "/api/graphql"))
+	router.impl.Handle("/api/graphql", gqlServer)
+}
+
+func (router *RequestRouter) addNGSIHandlers(db database.Datastore) {
+	router.Get("/ngsi-ld/v1/entities", ngsi.NewQueryEntitiesHandler(db))
+}
+
+//Get accepts a pattern that should be routed to the handlerFn on a GET request
+func (router *RequestRouter) Get(pattern string, handlerFn http.HandlerFunc) {
+	router.impl.Get(pattern, handlerFn)
+}
+
+//NewRequestRouter creates and returns a new router wrapper
+func NewRequestRouter() *RequestRouter {
+	router := &RequestRouter{impl: chi.NewRouter()}
+
+	router.impl.Use(cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
 		Debug:            false,
@@ -30,18 +57,25 @@ func Router() {
 
 	// Enable gzip compression for ngsi-ld responses
 	compressor := middleware.NewCompressor(flate.DefaultCompression, "application/json", "application/ld+json")
-	router.Use(compressor.Handler())
+	router.impl.Use(compressor.Handler())
+	router.impl.Use(middleware.Logger)
 
-	router.Use(middleware.Logger)
+	return router
+}
 
-	gqlServer := handler.New(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}}))
-	gqlServer.AddTransport(&transport.POST{})
-	gqlServer.Use(extension.Introspection{})
+func createRequestRouter(db database.Datastore) *RequestRouter {
+	router := NewRequestRouter()
 
-	router.Handle("/api/graphql/playground", playground.Handler("GraphQL playground", "/api/graphql"))
-	router.Handle("/api/graphql", gqlServer)
+	router.addGraphQLHandlers(db)
+	router.addNGSIHandlers(db)
 
-	router.Get("/ngsi-ld/v1/entities", ngsi.QueryEntities)
+	return router
+}
+
+//CreateRouterAndStartServing creates a request router, registers all handlers and starts serving requests
+func CreateRouterAndStartServing(db database.Datastore) {
+
+	router := createRequestRouter(db)
 
 	port := os.Getenv("SNOWDEPTH_API_PORT")
 	if port == "" {
@@ -50,5 +84,5 @@ func Router() {
 
 	log.Printf("Starting api-snowdepth on port %s.\n", port)
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Fatal(http.ListenAndServe(":"+port, router.impl))
 }
