@@ -12,6 +12,7 @@ RUN go mod download
 
 COPY . .
 
+RUN go test -v ./...
 
 WORKDIR /app/cmd/api-snowdepth
 
