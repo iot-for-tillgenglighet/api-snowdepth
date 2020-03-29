@@ -2,14 +2,16 @@ package ngsi
 
 import (
 	"encoding/json"
-	"math"
 	"net/http"
 	"strings"
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld/errors"
-	"github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld/types"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
 )
+
+//Entity is an informational representative of something that is supposed to exist in the real world, physically or conceptually
+type Entity interface {
+}
 
 //entitiesDatastore is an interface containing all the entities related datastore functions
 type entitiesDatastore interface {
@@ -17,60 +19,39 @@ type entitiesDatastore interface {
 	GetLatestSnowdepthsForDevice(device string) ([]models.Snowdepth, error)
 }
 
-func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *types.WeatherObserved {
-	if r != nil {
-		entity := types.NewWeatherObserved(r.Device, r.Latitude, r.Longitude, r.Timestamp)
-		entity.SnowHeight = types.NewNumberProperty(math.Round(float64(r.Depth*10)) / 10)
-		return entity
-	}
-
-	return nil
-}
+type QueryEntitiesCallback func(entity Entity) error
 
 //NewQueryEntitiesHandler handles GET requests for NGSI entitites
-func NewQueryEntitiesHandler(db entitiesDatastore) http.HandlerFunc {
+func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		entityTypes := r.URL.Query().Get("type")
+		entityTypeNames := r.URL.Query().Get("type")
+		attributeNames := r.URL.Query().Get("attrs")
 
-		if entityTypes != "" && entityTypes != "WeatherObserved" {
+		if entityTypeNames == "" && attributeNames == "" {
 			errors.ReportNewInvalidRequest(
 				w,
-				"This service only supports the WeatherObserved entity type.",
+				"A request for entities MUST specify at least one of type and attrs.",
 			)
 			return
 		}
 
-		attributes := strings.Split(r.URL.Query().Get("attrs"), ",")
-		for _, attr := range attributes {
-			if attr != "" && attr != "snowHeight" {
-				errors.ReportNewInvalidRequest(
-					w,
-					"This service only supports the snowHeight attribute.",
-				)
-				return
-			}
-		}
+		entityTypes := strings.Split(entityTypeNames, ",")
+		attributes := strings.Split(attributeNames, ",")
 
-		var snowdepths []models.Snowdepth
+		q := r.URL.Query().Get("q")
+		query := newQueryFromParameters(entityTypes, attributes, q)
+
+		contextSources := ctxReg.GetContextSourcesForQuery(query)
+
+		var entities = []Entity{}
 		var err error
 
-		query := r.URL.Query().Get("q")
-		refDevicePrefix := "refDevice==\""
-
-		if strings.HasPrefix(query, refDevicePrefix) {
-			splitElems := strings.Split(query, "\"")
-			deviceIDPrefix := "urn:ngsi-ld:Device:"
-			deviceID := splitElems[1]
-
-			if strings.HasPrefix(deviceID, deviceIDPrefix) {
-				deviceID = strings.TrimPrefix(deviceID, deviceIDPrefix)
-				snowdepths, err = db.GetLatestSnowdepthsForDevice(deviceID)
-			} else {
-				errors.ReportNewInvalidRequest(w, "Invalid device reference: "+deviceID)
-				return
-			}
-		} else {
-			snowdepths, err = db.GetLatestSnowdepths()
+		// TODO: Iterate over the context sources and concatenate the results
+		if len(contextSources) > 0 {
+			err = contextSources[0].GetEntities(query, func(entity Entity) error {
+				entities = append(entities, entity)
+				return nil
+			})
 		}
 
 		if err != nil {
@@ -81,18 +62,7 @@ func NewQueryEntitiesHandler(db entitiesDatastore) http.HandlerFunc {
 			return
 		}
 
-		depthcount := len(snowdepths)
-		ngsiEntities := []*types.WeatherObserved{}
-
-		if depthcount > 0 {
-			ngsiEntities = make([]*types.WeatherObserved, 0, depthcount)
-
-			for _, v := range snowdepths {
-				ngsiEntities = append(ngsiEntities, convertDatabaseRecordToWeatherObserved(&v))
-			}
-		}
-
-		bytes, err := json.MarshalIndent(ngsiEntities, "", "  ")
+		bytes, err := json.MarshalIndent(entities, "", "  ")
 		if err != nil {
 			errors.ReportNewInternalError(w, "Failed to encode response.")
 			return

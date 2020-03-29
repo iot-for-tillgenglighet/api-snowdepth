@@ -2,8 +2,10 @@ package handler
 
 import (
 	"compress/flate"
+	"math"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -13,7 +15,9 @@ import (
 	"github.com/go-chi/chi/middleware"
 	gql "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/graphql"
 	ngsi "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld"
+	"github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld/types"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
+	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
 	"github.com/rs/cors"
 
 	log "github.com/sirupsen/logrus"
@@ -36,8 +40,8 @@ func (router *RequestRouter) addGraphQLHandlers(db database.Datastore) {
 	router.impl.Handle("/api/graphql", gqlServer)
 }
 
-func (router *RequestRouter) addNGSIHandlers(db database.Datastore) {
-	router.Get("/ngsi-ld/v1/entities", ngsi.NewQueryEntitiesHandler(db))
+func (router *RequestRouter) addNGSIHandlers(contextRegistry ngsi.ContextRegistry) {
+	router.Get("/ngsi-ld/v1/entities", ngsi.NewQueryEntitiesHandler(contextRegistry))
 }
 
 //Get accepts a pattern that should be routed to the handlerFn on a GET request
@@ -45,8 +49,8 @@ func (router *RequestRouter) Get(pattern string, handlerFn http.HandlerFunc) {
 	router.impl.Get(pattern, handlerFn)
 }
 
-//NewRequestRouter creates and returns a new router wrapper
-func NewRequestRouter() *RequestRouter {
+//newRequestRouter creates and returns a new router wrapper
+func newRequestRouter() *RequestRouter {
 	router := &RequestRouter{impl: chi.NewRouter()}
 
 	router.impl.Use(cors.New(cors.Options{
@@ -57,17 +61,17 @@ func NewRequestRouter() *RequestRouter {
 
 	// Enable gzip compression for ngsi-ld responses
 	compressor := middleware.NewCompressor(flate.DefaultCompression, "application/json", "application/ld+json")
-	router.impl.Use(compressor.Handler())
+	router.impl.Use(compressor.Handler)
 	router.impl.Use(middleware.Logger)
 
 	return router
 }
 
-func createRequestRouter(db database.Datastore) *RequestRouter {
-	router := NewRequestRouter()
+func createRequestRouter(contextRegistry ngsi.ContextRegistry, db database.Datastore) *RequestRouter {
+	router := newRequestRouter()
 
 	router.addGraphQLHandlers(db)
-	router.addNGSIHandlers(db)
+	router.addNGSIHandlers(contextRegistry)
 
 	return router
 }
@@ -75,7 +79,12 @@ func createRequestRouter(db database.Datastore) *RequestRouter {
 //CreateRouterAndStartServing creates a request router, registers all handlers and starts serving requests
 func CreateRouterAndStartServing(db database.Datastore) {
 
-	router := createRequestRouter(db)
+	contextRegistry := ngsi.NewContextRegistry()
+	contextSource := &contextSource{db: db}
+
+	contextRegistry.Register(contextSource)
+
+	router := createRequestRouter(contextRegistry, db)
 
 	port := os.Getenv("SNOWDEPTH_API_PORT")
 	if port == "" {
@@ -85,4 +94,50 @@ func CreateRouterAndStartServing(db database.Datastore) {
 	log.Printf("Starting api-snowdepth on port %s.\n", port)
 
 	log.Fatal(http.ListenAndServe(":"+port, router.impl))
+}
+
+type contextSource struct {
+	db database.Datastore
+}
+
+func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *types.WeatherObserved {
+	if r != nil {
+		entity := types.NewWeatherObserved(r.Device, r.Latitude, r.Longitude, r.Timestamp)
+		entity.SnowHeight = types.NewNumberProperty(math.Round(float64(r.Depth*10)) / 10)
+		return entity
+	}
+
+	return nil
+}
+
+func (cs *contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitiesCallback) error {
+
+	var snowdepths []models.Snowdepth
+	var err error
+
+	if query.HasDeviceReference() {
+		deviceID := strings.TrimPrefix(query.Device(), "urn:ngsi-ld:Device:")
+		snowdepths, err = cs.db.GetLatestSnowdepthsForDevice(deviceID)
+	} else {
+		snowdepths, err = cs.db.GetLatestSnowdepths()
+	}
+
+	if err == nil {
+		for _, v := range snowdepths {
+			err = callback(convertDatabaseRecordToWeatherObserved(&v))
+			if err != nil {
+				break
+			}
+		}
+	}
+
+	return err
+}
+
+func (cs *contextSource) ProvidesAttribute(attributeName string) bool {
+	return attributeName == "snowHeight"
+}
+
+func (cs *contextSource) ProvidesType(typeName string) bool {
+	return typeName == "WeatherObserved"
 }

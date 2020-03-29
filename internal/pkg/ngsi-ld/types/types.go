@@ -1,6 +1,11 @@
 package types
 
-type Entity struct {
+type Entity interface {
+}
+
+type BaseEntity struct {
+	ID      string   `json:"id"`
+	Type    string   `json:"type"`
 	Context []string `json:"@context"`
 }
 
@@ -85,15 +90,13 @@ func createDeviceRelationshipFromDevice(device string) *DeviceRelationship {
 }
 
 type WeatherObserved struct {
-	ID           string              `json:"id"`
-	Type         string              `json:"type"`
+	BaseEntity
 	DateCreated  *DateTimeProperty   `json:"dateCreated,omitempty"`
 	DateModified *DateTimeProperty   `json:"dateModified,omitempty"`
 	DateObserved DateTimeProperty    `json:"dateObserved"`
 	Location     GeoJSONProperty     `json:"location"`
 	RefDevice    *DeviceRelationship `json:"refDevice,omitempty"`
 	SnowHeight   *NumberProperty     `json:"snowHeight,omitempty"`
-	Entity
 }
 
 func NewWeatherObserved(device string, latitude float64, longitude float64, observedAt string) *WeatherObserved {
@@ -107,12 +110,12 @@ func NewWeatherObserved(device string, latitude float64, longitude float64, obse
 	id := "urn:ngsi-ld:WeatherObserved:SnowHeight:" + device + ":" + observedAt
 
 	return &WeatherObserved{
-		ID:           id,
-		Type:         "WeatherObserved",
 		DateObserved: *dateTimeValue,
 		Location:     createGeoJSONPropertyFromWGS84(latitude, longitude),
 		RefDevice:    refDevice,
-		Entity: Entity{
+		BaseEntity: BaseEntity{
+			ID:   id,
+			Type: "WeatherObserved",
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

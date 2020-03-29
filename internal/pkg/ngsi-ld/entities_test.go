@@ -5,8 +5,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-
-	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
 )
 
 func createURL(params ...string) string {
@@ -23,50 +21,62 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestGetEntities(t *testing.T) {
+func TestGetEntitiesWithoutAttributesOrTypesFails(t *testing.T) {
+	req, _ := http.NewRequest("GET", createURL(), nil)
+	w := httptest.NewRecorder()
+
+	NewQueryEntitiesHandler(NewContextRegistry()).ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Error("GET /entities MUST require either type or attrs request parameter")
+	}
+}
+
+func TestGetEntitiesWithAttribute(t *testing.T) {
 	req, _ := http.NewRequest("GET", createURL("attrs=snowHeight"), nil)
 	w := httptest.NewRecorder()
-	db := &mockDatastore{}
+	contextRegistry := NewContextRegistry()
+	contextSource := &mockCtxSource{}
 
-	NewQueryEntitiesHandler(db).ServeHTTP(w, req)
+	contextRegistry.Register(contextSource)
+
+	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Error("That did not work ... :(")
+		t.Error("That did not work .... :(")
 	}
 }
 
 func TestGetEntitiesForDevice(t *testing.T) {
 	req, _ := http.NewRequest("GET", createURL("attrs=snowHeight", "q=refDevice==\"urn:ngsi-ld:Device:mydevice\""), nil)
 	w := httptest.NewRecorder()
-	db := &mockDatastore{}
+	contextRegistry := NewContextRegistry()
 
-	NewQueryEntitiesHandler(db).ServeHTTP(w, req)
+	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Error("That did not work ... :(")
 	}
 }
 
-type mockDatastore struct {
-	entities map[string][]*models.Snowdepth
+func newMockedContextSource(typeName string, attributeName string) *mockCtxSource {
+	source := &mockCtxSource{typeName: typeName, attributeName: attributeName}
+	return source
 }
 
-func (db *mockDatastore) GetLatestSnowdepths() ([]models.Snowdepth, error) {
-	return []models.Snowdepth{}, nil
+type mockCtxSource struct {
+	typeName      string
+	attributeName string
 }
 
-func (db *mockDatastore) GetLatestSnowdepthsForDevice(device string) ([]models.Snowdepth, error) {
-	if device == "mydevice" {
-		e := responseEntity(device)
-		return []models.Snowdepth{e}, nil
-	}
-
-	return []models.Snowdepth{}, nil
+func (s *mockCtxSource) GetEntities(q Query, cb QueryEntitiesCallback) error {
+	return nil
 }
 
-func responseEntity(device string) models.Snowdepth {
-	depth := models.Snowdepth{
-		Device: device,
-	}
-	return depth
+func (s *mockCtxSource) ProvidesAttribute(attributeName string) bool {
+	return s.attributeName == attributeName
+}
+
+func (s *mockCtxSource) ProvidesType(typeName string) bool {
+	return s.typeName == typeName
 }

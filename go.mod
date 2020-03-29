@@ -3,26 +3,18 @@ module github.com/iot-for-tillgenglighet/api-snowdepth
 go 1.13
 
 require (
-	github.com/99designs/gqlgen v0.11.2
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
-	github.com/go-chi/chi v4.0.3+incompatible
-	github.com/gorilla/websocket v1.4.1 // indirect
+	github.com/99designs/gqlgen v0.11.3
+	github.com/go-chi/chi v4.0.4+incompatible
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/iot-for-tillgenglighet/api-temperature v0.0.0-20191114231120-e3744f3c39f6 // indirect
-	github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20191114224854-abfc2ffce868
+	github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20200124165843-f64c6b8239e8
 	github.com/jinzhu/gorm v1.9.12
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lib/pq v1.3.0 // indirect
-	github.com/matryer/moq v0.0.0-20200125112110-7615cbe60268 // indirect
-	github.com/mitchellh/mapstructure v1.1.2 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rs/cors v1.6.0
-	github.com/sirupsen/logrus v1.4.2
+	github.com/mitchellh/mapstructure v1.2.2 // indirect
+	github.com/rs/cors v1.7.0
+	github.com/sirupsen/logrus v1.5.0
 	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
-	github.com/urfave/cli v1.22.3 // indirect
-	github.com/vektah/dataloaden v0.3.0 // indirect
-	github.com/vektah/gqlparser v1.3.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.0.1
-	golang.org/x/tools v0.0.0-20200308013534-11ec41452d41 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
