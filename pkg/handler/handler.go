@@ -14,10 +14,11 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	gql "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/graphql"
-	ngsi "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld"
-	"github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld/types"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
+	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/datamodels/fiware"
+	ngsi "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld"
+	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
 	"github.com/rs/cors"
 
 	log "github.com/sirupsen/logrus"
@@ -105,9 +106,9 @@ type contextSource struct {
 	db database.Datastore
 }
 
-func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *types.WeatherObserved {
+func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *fiware.WeatherObserved {
 	if r != nil {
-		entity := types.NewWeatherObserved(r.Device, r.Latitude, r.Longitude, r.Timestamp)
+		entity := fiware.NewWeatherObserved(r.Device, r.Latitude, r.Longitude, r.Timestamp)
 		entity.SnowHeight = types.NewNumberProperty(math.Round(float64(r.Depth*10)) / 10)
 		return entity
 	}
