@@ -1,19 +1,26 @@
 package ngsi
 
 import (
+	"net/http"
 	"strings"
 )
 
+//Query is an interface to be used when passing queries to context registries and sources
 type Query interface {
 	HasDeviceReference() bool
 	Device() string
+
+	EntityAttributes() []string
+	EntityTypes() []string
+
+	Request() *http.Request
 }
 
-func newQueryFromParameters(types []string, attributes []string, q string) Query {
+func newQueryFromParameters(req *http.Request, types []string, attributes []string, q string) Query {
 
 	const refDevicePrefix string = "refDevice==\""
 
-	qw := &queryWrapper{types: types, attributes: attributes}
+	qw := &queryWrapper{request: req, types: types, attributes: attributes}
 
 	if strings.HasPrefix(q, refDevicePrefix) {
 		splitElems := strings.Split(q, "\"")
@@ -24,6 +31,7 @@ func newQueryFromParameters(types []string, attributes []string, q string) Query
 }
 
 type queryWrapper struct {
+	request    *http.Request
 	types      []string
 	attributes []string
 	device     *string
@@ -35,4 +43,16 @@ func (q *queryWrapper) HasDeviceReference() bool {
 
 func (q *queryWrapper) Device() string {
 	return *q.device
+}
+
+func (q *queryWrapper) EntityAttributes() []string {
+	return q.attributes
+}
+
+func (q *queryWrapper) EntityTypes() []string {
+	return q.types
+}
+
+func (q *queryWrapper) Request() *http.Request {
+	return q.request
 }

@@ -4,14 +4,21 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 )
 
-func createURL(params ...string) string {
-	url := "http://localhost:8080/ngsi-ld/v1/entities?"
+func createURL(path string, params ...string) string {
+	url := "http://localhost:8080/ngsi-ld/v1" + path
 
-	for _, p := range params {
-		url = url + p + "&"
+	if len(params) > 0 {
+		url = url + "?"
+
+		for _, p := range params {
+			url = url + p + "&"
+		}
+
+		url = strings.TrimSuffix(url, "&")
 	}
 
 	return url
@@ -22,7 +29,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetEntitiesWithoutAttributesOrTypesFails(t *testing.T) {
-	req, _ := http.NewRequest("GET", createURL(), nil)
+	req, _ := http.NewRequest("GET", createURL("/entitites"), nil)
 	w := httptest.NewRecorder()
 
 	NewQueryEntitiesHandler(NewContextRegistry()).ServeHTTP(w, req)
@@ -33,12 +40,13 @@ func TestGetEntitiesWithoutAttributesOrTypesFails(t *testing.T) {
 }
 
 func TestGetEntitiesWithAttribute(t *testing.T) {
-	req, _ := http.NewRequest("GET", createURL("attrs=snowHeight"), nil)
+	req, _ := http.NewRequest("GET", createURL("/entitites", "attrs=snowHeight"), nil)
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
-	contextSource := &mockCtxSource{}
-
-	contextRegistry.Register(contextSource)
+	contextRegistry.Register(newMockedContextSource(
+		"", "snowHeight",
+		e(""),
+	))
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
@@ -48,28 +56,55 @@ func TestGetEntitiesWithAttribute(t *testing.T) {
 }
 
 func TestGetEntitiesForDevice(t *testing.T) {
-	req, _ := http.NewRequest("GET", createURL("attrs=snowHeight", "q=refDevice==\"urn:ngsi-ld:Device:mydevice\""), nil)
+	deviceID := "urn:ngsi-ld:Device:mydevice"
+	req, _ := http.NewRequest("GET", createURL("/entitites", "attrs=snowHeight", "q=refDevice==\""+deviceID+"\""), nil)
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
+	contextSource := newMockedContextSource("", "snowHeight")
+	contextRegistry.Register(contextSource)
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
+	if contextSource.queriedDevice != deviceID {
+		t.Error("Queried device did not match expectations. ", contextSource.queriedDevice, " != ", deviceID)
+	} else if w.Code != http.StatusOK {
 		t.Error("That did not work ... :(")
 	}
 }
 
-func newMockedContextSource(typeName string, attributeName string) *mockCtxSource {
+type mockEntity struct {
+	Value string
+}
+
+func e(val string) mockEntity {
+	return mockEntity{Value: val}
+}
+
+func newMockedContextSource(typeName string, attributeName string, e ...mockEntity) *mockCtxSource {
 	source := &mockCtxSource{typeName: typeName, attributeName: attributeName}
+	for _, entity := range e {
+		source.entities = append(source.entities, entity)
+	}
 	return source
 }
 
 type mockCtxSource struct {
 	typeName      string
 	attributeName string
+	entities      []Entity
+
+	queriedDevice string
 }
 
 func (s *mockCtxSource) GetEntities(q Query, cb QueryEntitiesCallback) error {
+
+	if q.HasDeviceReference() {
+		s.queriedDevice = q.Device()
+	}
+
+	for _, e := range s.entities {
+		cb(e)
+	}
 	return nil
 }
 

@@ -80,9 +80,14 @@ func createRequestRouter(contextRegistry ngsi.ContextRegistry, db database.Datas
 func CreateRouterAndStartServing(db database.Datastore) {
 
 	contextRegistry := ngsi.NewContextRegistry()
-	contextSource := &contextSource{db: db}
+	ctxSource := contextSource{db: db}
+	contextRegistry.Register(ctxSource)
 
-	contextRegistry.Register(contextSource)
+	// Enable this code to allow the snowdepth service to do double duty as a broker in the iot-hub
+	//remoteURL := "http://api-temperature-service.iot.svc.cluster.local/"
+	//registration := ngsi.NewCsourceRegistration("WeatherObserved", []string{"temperature"}, remoteURL)
+	//contextSource, _ := ngsi.NewRemoteContextSource(registration)
+	//contextRegistry.Register(contextSource)
 
 	router := createRequestRouter(contextRegistry, db)
 
@@ -110,7 +115,7 @@ func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *types.WeatherO
 	return nil
 }
 
-func (cs *contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitiesCallback) error {
+func (cs contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitiesCallback) error {
 
 	var snowdepths []models.Snowdepth
 	var err error
@@ -134,10 +139,10 @@ func (cs *contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntiti
 	return err
 }
 
-func (cs *contextSource) ProvidesAttribute(attributeName string) bool {
+func (cs contextSource) ProvidesAttribute(attributeName string) bool {
 	return attributeName == "snowHeight"
 }
 
-func (cs *contextSource) ProvidesType(typeName string) bool {
+func (cs contextSource) ProvidesType(typeName string) bool {
 	return typeName == "WeatherObserved"
 }

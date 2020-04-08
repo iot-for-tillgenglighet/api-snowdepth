@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/99designs/gqlgen v0.11.3
 	github.com/go-chi/chi v4.0.4+incompatible
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20200124165843-f64c6b8239e8

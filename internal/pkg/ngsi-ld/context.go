@@ -7,6 +7,8 @@ type ContextRegistry interface {
 	Register(source ContextSource)
 }
 
+//NewContextRegistry initializes and returns a new default context registry without
+//any registered context sources
 func NewContextRegistry() ContextRegistry {
 	return &registry{}
 }
@@ -16,8 +18,26 @@ type registry struct {
 }
 
 func (r *registry) GetContextSourcesForQuery(query Query) []ContextSource {
+	matchingSources := []ContextSource{}
+
+	entityTypeNames := query.EntityTypes()
+	entityAttributeNames := query.EntityAttributes()
+
 	// TODO: Fix potential race issue
-	return r.sources
+	for _, src := range r.sources {
+		for _, typeName := range entityTypeNames {
+			if typeName == "" || src.ProvidesType(typeName) {
+				for _, attributeName := range entityAttributeNames {
+					if attributeName == "" || src.ProvidesAttribute(attributeName) {
+						matchingSources = append(matchingSources, src)
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return matchingSources
 }
 
 func (r *registry) Register(source ContextSource) {

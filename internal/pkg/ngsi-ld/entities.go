@@ -6,19 +6,14 @@ import (
 	"strings"
 
 	"github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/ngsi-ld/errors"
-	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
 )
 
 //Entity is an informational representative of something that is supposed to exist in the real world, physically or conceptually
 type Entity interface {
 }
 
-//entitiesDatastore is an interface containing all the entities related datastore functions
-type entitiesDatastore interface {
-	GetLatestSnowdepths() ([]models.Snowdepth, error)
-	GetLatestSnowdepthsForDevice(device string) ([]models.Snowdepth, error)
-}
-
+//QueryEntitiesCallback is used when queried context sources should pass back any
+//entities matching the query that has been passed in
 type QueryEntitiesCallback func(entity Entity) error
 
 //NewQueryEntitiesHandler handles GET requests for NGSI entitites
@@ -28,9 +23,9 @@ func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 		attributeNames := r.URL.Query().Get("attrs")
 
 		if entityTypeNames == "" && attributeNames == "" {
-			errors.ReportNewInvalidRequest(
+			errors.ReportNewBadRequestData(
 				w,
-				"A request for entities MUST specify at least one of type and attrs.",
+				"A request for entities MUST specify at least one of type or attrs.",
 			)
 			return
 		}
@@ -39,25 +34,27 @@ func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 		attributes := strings.Split(attributeNames, ",")
 
 		q := r.URL.Query().Get("q")
-		query := newQueryFromParameters(entityTypes, attributes, q)
+		query := newQueryFromParameters(r, entityTypes, attributes, q)
 
 		contextSources := ctxReg.GetContextSourcesForQuery(query)
 
 		var entities = []Entity{}
 		var err error
 
-		// TODO: Iterate over the context sources and concatenate the results
-		if len(contextSources) > 0 {
-			err = contextSources[0].GetEntities(query, func(entity Entity) error {
+		for _, source := range contextSources {
+			err = source.GetEntities(query, func(entity Entity) error {
 				entities = append(entities, entity)
 				return nil
 			})
+			if err != nil {
+				break
+			}
 		}
 
 		if err != nil {
 			errors.ReportNewInternalError(
 				w,
-				"An internal error was encountered when trying to get entities from the database.",
+				"An internal error was encountered when trying to get entities from the context source.",
 			)
 			return
 		}

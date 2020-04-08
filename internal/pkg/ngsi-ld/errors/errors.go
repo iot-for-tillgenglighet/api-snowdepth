@@ -24,6 +24,28 @@ type ProblemDetailsImpl struct {
 
 var problemContentType = "application/problem+json"
 
+//BadRequestData reports that the request includes input data which does not meet the requirements of the operation
+type BadRequestData struct {
+	ProblemDetailsImpl
+}
+
+//NewBadRequestData creates and returns a new instance of a BadRequestData with the supplied problem detail
+func NewBadRequestData(detail string) *BadRequestData {
+	return &BadRequestData{
+		ProblemDetailsImpl: ProblemDetailsImpl{
+			typ:    "https://uri.etsi.org/ngsi-ld/errors/BadRequestData",
+			title:  "Bad Request Data",
+			detail: detail,
+		},
+	}
+}
+
+//ReportNewBadRequestData creates a BadRequestData instance and sends it to the supplied http.ResponseWriter
+func ReportNewBadRequestData(w http.ResponseWriter, detail string) {
+	brd := NewBadRequestData(detail)
+	brd.WriteResponse(w)
+}
+
 //InvalidRequest reports that the request associated to the operation is syntactically
 //invalid or includes wrong content
 type InvalidRequest struct {
