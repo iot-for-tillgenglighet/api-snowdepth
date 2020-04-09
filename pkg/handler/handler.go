@@ -85,10 +85,10 @@ func CreateRouterAndStartServing(db database.Datastore) {
 	contextRegistry.Register(ctxSource)
 
 	// Enable this code to allow the snowdepth service to do double duty as a broker in the iot-hub
-	//remoteURL := "http://api-temperature-service.iot.svc.cluster.local/"
-	//registration := ngsi.NewCsourceRegistration("WeatherObserved", []string{"temperature"}, remoteURL)
-	//contextSource, _ := ngsi.NewRemoteContextSource(registration)
-	//contextRegistry.Register(contextSource)
+	remoteURL := "http://api-temperature-service.iot.svc.cluster.local/"
+	registration := ngsi.NewCsourceRegistration("WeatherObserved", []string{"temperature"}, remoteURL)
+	contextSource, _ := ngsi.NewRemoteContextSource(registration)
+	contextRegistry.Register(contextSource)
 
 	router := createRequestRouter(contextRegistry, db)
 
