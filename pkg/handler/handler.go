@@ -108,7 +108,7 @@ type contextSource struct {
 
 func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *fiware.WeatherObserved {
 	if r != nil {
-		entity := fiware.NewWeatherObserved(r.Device, r.Latitude, r.Longitude, r.Timestamp)
+		entity := fiware.NewWeatherObserved("snowHeight:"+r.Device, r.Latitude, r.Longitude, r.Timestamp)
 		entity.SnowHeight = types.NewNumberProperty(math.Round(float64(r.Depth*10)) / 10)
 		return entity
 	}
