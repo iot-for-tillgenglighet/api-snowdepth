@@ -8,7 +8,7 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20200124165843-f64c6b8239e8
-	github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20200408202142-e5a35a71c0c0
+	github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20200413202056-263cf989c948
 	github.com/jinzhu/gorm v1.9.12
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lib/pq v1.3.0 // indirect
