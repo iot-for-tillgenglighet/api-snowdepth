@@ -86,8 +86,14 @@ func CreateRouterAndStartServing(db database.Datastore) {
 
 	// Enable this code to allow the snowdepth service to do double duty as a broker in the iot-hub
 	remoteURL := "http://api-temperature-service.iot.svc.cluster.local/"
-	registration := ngsi.NewCsourceRegistration("WeatherObserved", []string{"temperature"}, remoteURL)
+	registration, _ := ngsi.NewCsourceRegistration("WeatherObserved", []string{"temperature"}, remoteURL, nil)
 	contextSource, _ := ngsi.NewRemoteContextSource(registration)
+	contextRegistry.Register(contextSource)
+
+	remoteURL = "http://iot-device-registry-service.iot.svc.cluster.local/"
+	regex := "^urn:ngsi-ld:Device:.+"
+	registration, _ = ngsi.NewCsourceRegistration("Device", []string{"value"}, remoteURL, &regex)
+	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
 	router := createRequestRouter(contextRegistry, db)
@@ -144,6 +150,16 @@ func (cs contextSource) ProvidesAttribute(attributeName string) bool {
 	return attributeName == "snowHeight"
 }
 
+func (cs contextSource) ProvidesEntitiesWithMatchingID(entityID string) bool {
+	// not supported yet
+	return false
+}
+
 func (cs contextSource) ProvidesType(typeName string) bool {
 	return typeName == "WeatherObserved"
+}
+
+func (cs contextSource) UpdateEntityAttributes(entityID string, patch ngsi.Patch) error {
+	// not supported yet
+	return nil
 }
