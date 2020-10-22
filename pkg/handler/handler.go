@@ -128,6 +128,10 @@ func convertDatabaseRecordToWeatherObserved(r *models.Snowdepth) *fiware.Weather
 	return nil
 }
 
+func (cs contextSource) CreateEntity(typeName, entityID string, req ngsi.Request) error {
+	return nil
+}
+
 func (cs contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitiesCallback) error {
 
 	var snowdepths []models.Snowdepth
@@ -165,7 +169,7 @@ func (cs contextSource) ProvidesType(typeName string) bool {
 	return typeName == "WeatherObserved"
 }
 
-func (cs contextSource) UpdateEntityAttributes(entityID string, patch ngsi.Patch) error {
+func (cs contextSource) UpdateEntityAttributes(entityID string, req ngsi.Request) error {
 	// not supported yet
 	return nil
 }
