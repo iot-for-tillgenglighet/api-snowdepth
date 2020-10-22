@@ -44,6 +44,7 @@ func (router *RequestRouter) addGraphQLHandlers(db database.Datastore) {
 func (router *RequestRouter) addNGSIHandlers(contextRegistry ngsi.ContextRegistry) {
 	router.Get("/ngsi-ld/v1/entities", ngsi.NewQueryEntitiesHandler(contextRegistry))
 	router.Patch("/ngsi-ld/v1/entities/{entity}/attrs/", ngsi.NewUpdateEntityAttributesHandler(contextRegistry))
+	router.Post("/ngsi-ld/v1/entities", ngsi.NewCreateEntityHandler(contextRegistry))
 }
 
 //Get accepts a pattern that should be routed to the handlerFn on a GET request
@@ -54,6 +55,11 @@ func (router *RequestRouter) Get(pattern string, handlerFn http.HandlerFunc) {
 //Patch accepts a pattern that should be routed to the handlerFn on a PATCH request
 func (router *RequestRouter) Patch(pattern string, handlerFn http.HandlerFunc) {
 	router.impl.Patch(pattern, handlerFn)
+}
+
+//Post accepts a pattern that should be routed to the handlerFn on a POST request
+func (router *RequestRouter) Post(pattern string, handlerFn http.HandlerFunc) {
+	router.impl.Post(pattern, handlerFn)
 }
 
 //newRequestRouter creates and returns a new router wrapper
