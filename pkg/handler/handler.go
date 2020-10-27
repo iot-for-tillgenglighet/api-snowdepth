@@ -102,6 +102,11 @@ func CreateRouterAndStartServing(db database.Datastore) {
 	contextSource, _ := ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
+	remoteURL = "http://api-temperature-service.iot.svc.cluster.local/"
+	registration, _ = ngsi.NewCsourceRegistration("WaterQualityObserved", []string{"temperature"}, remoteURL, nil)
+	contextSource, _ = ngsi.NewRemoteContextSource(registration)
+	contextRegistry.Register(contextSource)
+
 	remoteURL = "http://iot-device-registry-service.iot.svc.cluster.local/"
 	regex := "^urn:ngsi-ld:Device:.+"
 	registration, _ = ngsi.NewCsourceRegistration("Device", []string{"value"}, remoteURL, &regex)
