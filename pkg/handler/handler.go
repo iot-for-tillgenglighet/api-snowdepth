@@ -2,6 +2,7 @@ package handler
 
 import (
 	"compress/flate"
+	"errors"
 	"math"
 	"net/http"
 	"os"
@@ -43,6 +44,7 @@ func (router *RequestRouter) addGraphQLHandlers(db database.Datastore) {
 
 func (router *RequestRouter) addNGSIHandlers(contextRegistry ngsi.ContextRegistry) {
 	router.Get("/ngsi-ld/v1/entities", ngsi.NewQueryEntitiesHandler(contextRegistry))
+	router.Get("/ngsi-ld/v1/entities/{entity}", ngsi.NewRetrieveEntityHandler(contextRegistry))
 	router.Patch("/ngsi-ld/v1/entities/{entity}/attrs/", ngsi.NewUpdateEntityAttributesHandler(contextRegistry))
 	router.Post("/ngsi-ld/v1/entities", ngsi.NewCreateEntityHandler(contextRegistry))
 }
@@ -130,6 +132,12 @@ func CreateRouterAndStartServing(db database.Datastore) {
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
+	remoteURL = "http://iot-device-registry-service.iot.svc.cluster.local/"
+	regex = "^urn:ngsi-ld:DeviceModel:.+"
+	registration, _ = ngsi.NewCsourceRegistration("DeviceModel", []string{}, remoteURL, &regex)
+	contextSource, _ = ngsi.NewRemoteContextSource(registration)
+	contextRegistry.Register(contextSource)
+
 	router := createRequestRouter(contextRegistry, db)
 
 	port := os.Getenv("SNOWDEPTH_API_PORT")
@@ -198,6 +206,9 @@ func (cs contextSource) ProvidesType(typeName string) bool {
 }
 
 func (cs contextSource) UpdateEntityAttributes(entityID string, req ngsi.Request) error {
-	// not supported yet
-	return nil
+	return errors.New("UpdateEntityAttributes is not supported")
+}
+
+func (cs contextSource) RetrieveEntity(entityID string, req ngsi.Request) (ngsi.Entity, error) {
+	return nil, errors.New("RetrieveEntity is not supported")
 }
