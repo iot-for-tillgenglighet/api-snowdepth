@@ -138,6 +138,12 @@ func CreateRouterAndStartServing(db database.Datastore) {
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
+	remoteURL = "http://api-transportation-service.iot.svc.cluster.local/"
+	regex = "^urn:ngsi-ld:RoadSurfaceObserved:.+"
+	registration, _ = ngsi.NewCsourceRegistration("RoadSurfaceObserved", []string{}, remoteURL, &regex)
+	contextSource, _ = ngsi.NewRemoteContextSource(registration)
+	contextRegistry.Register(contextSource)
+
 	router := createRequestRouter(contextRegistry, db)
 
 	port := os.Getenv("SNOWDEPTH_API_PORT")
