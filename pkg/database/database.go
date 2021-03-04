@@ -83,8 +83,8 @@ func NewDatabaseConnection() (Datastore, error) {
 			log.Fatalf("Failed to connect to database %s \n", err)
 			time.Sleep(3 * time.Second)
 		} else {
-			db.impl = conn
-			db.impl.Debug().AutoMigrate(&models.Snowdepth{})
+			db.impl = conn.Debug()
+			db.impl.AutoMigrate(&models.Snowdepth{})
 			break
 		}
 		defer conn.Close()
