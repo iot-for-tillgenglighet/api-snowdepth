@@ -105,47 +105,42 @@ func CreateRouterAndStartServing(db database.Datastore) {
 	ctxSource := contextSource{db: db}
 	contextRegistry.Register(ctxSource)
 
-	// Enable this code to allow the snowdepth service to do double duty as a broker in the iot-hub
-	remoteURL := "http://api-problemreport-service.iot.svc.cluster.local/"
+	remoteURL := os.Getenv("NGSI_CTX_SRC_PROBLEMREPORT")
 	registration, _ := ngsi.NewCsourceRegistration("Open311ServiceRequest", []string{"service_code"}, remoteURL, nil)
 	contextSource, _ := ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
-	remoteURL = "http://api-temperature-service.iot.svc.cluster.local/"
+	remoteURL = os.Getenv("NGSI_CTX_SRC_TEMPERATURE")
 	registration, _ = ngsi.NewCsourceRegistration("WeatherObserved", []string{"temperature"}, remoteURL, nil)
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
-	remoteURL = "http://api-temperature-service.iot.svc.cluster.local/"
 	registration, _ = ngsi.NewCsourceRegistration("WaterQualityObserved", []string{"temperature"}, remoteURL, nil)
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
-	remoteURL = "http://api-transportation-service.iot.svc.cluster.local/"
+	remoteURL = os.Getenv("NGSI_CTX_SRC_TRANSPORTATION")
 	regex := "^urn:ngsi-ld:Road:.+"
 	registration, _ = ngsi.NewCsourceRegistration("Road", []string{}, remoteURL, &regex)
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
-	remoteURL = "http://api-transportation-service.iot.svc.cluster.local/"
 	regex = "^urn:ngsi-ld:RoadSegment:.+"
 	registration, _ = ngsi.NewCsourceRegistration("RoadSegment", []string{}, remoteURL, &regex)
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
-	remoteURL = "http://api-transportation-service.iot.svc.cluster.local/"
 	regex = "^urn:ngsi-ld:RoadSurfaceObserved:.+"
 	registration, _ = ngsi.NewCsourceRegistration("RoadSurfaceObserved", []string{}, remoteURL, &regex)
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
-	remoteURL = "http://iot-device-registry-service.iot.svc.cluster.local/"
+	remoteURL = os.Getenv("NGSI_CTX_SRC_DEVICES")
 	regex = "^urn:ngsi-ld:Device:.+"
 	registration, _ = ngsi.NewCsourceRegistration("Device", []string{"value"}, remoteURL, &regex)
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
-	remoteURL = "http://iot-device-registry-service.iot.svc.cluster.local/"
 	regex = "^urn:ngsi-ld:DeviceModel:.+"
 	registration, _ = ngsi.NewCsourceRegistration("DeviceModel", []string{}, remoteURL, &regex)
 	contextSource, _ = ngsi.NewRemoteContextSource(registration)
