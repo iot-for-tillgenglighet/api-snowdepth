@@ -39,8 +39,8 @@ github.com/hashicorp/golang-lru v0.5.4 h1:YDjusn29QI/Das2iO9M0BHnIbxPeyuCHsjMW+l
 github.com/hashicorp/golang-lru v0.5.4/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20201230002037-e79e8e927ae9 h1:Rit6Sdi481yS0aszBLqZlr70H3K5d3tvu22I0OjfwrA=
 github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20201230002037-e79e8e927ae9/go.mod h1:KAWin6BX41/tyhpYYff1UgOEz5ShtDLEmQ9naYUiC0c=
-github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20210314233126-6778314ff3b9 h1:n3hCCaP64fnujiIESeOEwzVJgi1C+/UKzZDOJXItFg4=
-github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20210314233126-6778314ff3b9/go.mod h1:cIbwqe96AYjHMj6nIth2RlcoOyrju81almGfQyVYAlM=
+github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20210314234305-561853fc65f0 h1:tCBSV56er0zASPgM4tCZ4Nu4PAqbBuUj4a67eqXQEjQ=
+github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20210314234305-561853fc65f0/go.mod h1:cIbwqe96AYjHMj6nIth2RlcoOyrju81almGfQyVYAlM=
 github.com/jinzhu/gorm v1.9.16 h1:+IyIjPEABKRpsu/F8OvDPy9fyQlgsg2luMV2ZIH5i5o=
 github.com/jinzhu/gorm v1.9.16/go.mod h1:G3LB3wezTOWM2ITLzPxEXgSkOXAntiLHS7UdBefADcs=
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
