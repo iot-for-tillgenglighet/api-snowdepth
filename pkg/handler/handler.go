@@ -81,7 +81,7 @@ func newRequestRouter() *RequestRouter {
 	}).Handler)
 
 	// Enable gzip compression for ngsi-ld responses
-	compressor := middleware.NewCompressor(flate.DefaultCompression, "application/json", "application/ld+json")
+	compressor := middleware.NewCompressor(flate.DefaultCompression, "application/json", "application/ld+json", "application/geo+json")
 	router.impl.Use(compressor.Handler)
 	router.impl.Use(middleware.Logger)
 
@@ -105,9 +105,14 @@ func CreateRouterAndStartServing(db database.Datastore) {
 	ctxSource := contextSource{db: db}
 	contextRegistry.Register(ctxSource)
 
-	remoteURL := os.Getenv("NGSI_CTX_SRC_PROBLEMREPORT")
-	registration, _ := ngsi.NewCsourceRegistration("Open311ServiceRequest", []string{"service_code"}, remoteURL, nil)
+	remoteURL := os.Getenv("NGSI_CTX_SRC_POINTOFINTEREST")
+	registration, _ := ngsi.NewCsourceRegistration("Beach", []string{}, remoteURL, nil)
 	contextSource, _ := ngsi.NewRemoteContextSource(registration)
+	contextRegistry.Register(contextSource)
+
+	remoteURL = os.Getenv("NGSI_CTX_SRC_PROBLEMREPORT")
+	registration, _ = ngsi.NewCsourceRegistration("Open311ServiceRequest", []string{"service_code"}, remoteURL, nil)
+	contextSource, _ = ngsi.NewRemoteContextSource(registration)
 	contextRegistry.Register(contextSource)
 
 	remoteURL = os.Getenv("NGSI_CTX_SRC_TEMPERATURE")
