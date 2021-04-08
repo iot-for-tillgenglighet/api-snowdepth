@@ -1,6 +1,4 @@
-FROM golang AS builder
-
-ENV GO111MODULE=on
+FROM golang:1.16 AS builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -16,12 +14,16 @@ RUN go test -v ./...
 
 WORKDIR /app/cmd/api-snowdepth
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 
-FROM alpine
+FROM registry.access.redhat.com/ubi8/ubi-minimal
+WORKDIR /opt/diwise
 
-RUN apk add ca-certificates
+COPY --from=builder /app/cmd/api-snowdepth/api-snowdepth /opt/diwise/
 
-COPY --from=builder /app/cmd/api-snowdepth/api-snowdepth /app/
+RUN chmod 775 /opt/diwise
 
-ENTRYPOINT ["/app/api-snowdepth"]
+EXPOSE 8080
+USER 1001
+
+ENTRYPOINT ["/opt/diwise/api-snowdepth"]
