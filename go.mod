@@ -7,7 +7,7 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20201230002037-e79e8e927ae9
-	github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20210409104200-ffebec85f357
+	github.com/iot-for-tillgenglighet/ngsi-ld-golang v0.0.0-20210410103544-a8049c2e1b00
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.10.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
