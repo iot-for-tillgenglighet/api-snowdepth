@@ -2,6 +2,10 @@
 
 This service is responsible for storing snowdepth telemetry and provide it to consumers via an API.
 
+## Deprecation Notice
+
+This repository is deprecated and the code has moved to https://github.com/diwise/api-snowdepth
+
 # Building and tagging with Docker
 
 `docker build -f deployments/Dockerfile -t iot-for-tillgenglighet/api-snowdepth:latest .`
